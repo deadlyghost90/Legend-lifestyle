@@ -38,12 +38,12 @@ $("#year").textContent=new Date().getFullYear();renderProducts();updateCart();
     const app=appSdk.getApps().length?appSdk.getApp():appSdk.initializeApp(config);
     const db=dbSdk.getDatabase(app);
     const snapshot=await dbSdk.get(dbSdk.ref(db,"storefrontProducts"));
-    if(!snapshot.exists())return;
+    if(!snapshot.exists()){PRODUCTS=[];renderProducts();updateCart();return;}
     const live=Object.entries(snapshot.val()).map(([id,p])=>({
       id, name:String(p.name||"Product"), type:/audio|earbud|speaker|headphone/i.test(String(p.category||""))?"audio":/watch|wearable|band/i.test(String(p.category||""))?"watch":"accessories",
       label:String(p.category||"ACCESSORIES").toUpperCase(), price:Number(p.price_pkr)||0, tag:"LEGEND",
       visual:/audio|earbud|speaker|headphone/i.test(String(p.category||""))?"visual-earbuds":/watch|wearable|band/i.test(String(p.category||""))?"visual-watch":"visual-band", symbol:"", description:String(p.description||"")
     })).filter(p=>p.price>0);
-    if(live.length){PRODUCTS=live;renderProducts();updateCart();}
+    PRODUCTS=live;renderProducts();updateCart();
   }catch(error){console.warn("Firebase catalogue unavailable; using demo products.",error&&error.name||"Error");}
 })();
