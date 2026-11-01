@@ -18,7 +18,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --ignore-scripts
-      - name: Check JavaScript syntax
+      - name: Check JavaScript syntax and Firebase rules JSON
         run: npm run check
-      - name: Run validation tests
+      - name: Run Firebase configuration tests
         run: npm test
