@@ -105,3 +105,6 @@ module.exports = async function handler(req, res) {
     return send(res, 500, { error: "Unexpected server error." });
   }
 };
+
+// Export pure validation for automated tests; Vercel invokes the handler function above.
+module.exports.validateProduct = validateProduct;
