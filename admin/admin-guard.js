@@ -33,10 +33,12 @@ window.LEGEND_ADMIN_READY = (async function () {
           const snap = await sdk.get(sdk.ref(db, "products"));
           result = { products: snap.exists() ? Object.entries(snap.val()).map(([id, p]) => ({ id, ...p })) : [] };
         } else if (method === "POST") {
-          if (typeof body.name !== "string" || !body.name.trim() || !Number.isSafeInteger(body.price_pkr) || body.price_pkr < 1 || !Number.isSafeInteger(body.stock) || body.stock < 0 || typeof body.category !== "string") throw new Error("Check product name, category, price and stock.");
+          if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 120 || typeof body.category !== "string" || !body.category.trim() || body.category.trim().length > 60 || !Number.isSafeInteger(body.price_pkr) || body.price_pkr < 1 || body.price_pkr > 100000000 || !Number.isSafeInteger(body.stock) || body.stock < 0 || body.stock > 10000000) throw new Error("Check product name, category, price and stock.");
           const idRef = sdk.push(sdk.ref(db, "products"));
-          const product = { name: body.name.trim(), slug: String(body.slug || body.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 90), category: body.category.trim(), description: String(body.description || ""), price_pkr: body.price_pkr, compare_at_price_pkr: body.compare_at_price_pkr || null, stock: body.stock, status: body.status === "active" ? "active" : "draft", created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-          if (!product.slug || product.description.length > 5000) throw new Error("Check the product slug and description.");
+          const slug = String(body.slug || body.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 90);
+          const description = String(body.description || "").trim();
+          if (!slug || description.length > 5000 || (body.compare_at_price_pkr != null && (!Number.isSafeInteger(body.compare_at_price_pkr) || body.compare_at_price_pkr < 1 || body.compare_at_price_pkr > 100000000)) || (body.status !== undefined && !["active", "draft"].includes(body.status))) throw new Error("Check the product slug, description, compare-at price and status.");
+          const product = { name: body.name.trim(), slug, category: body.category.trim(), description, price_pkr: body.price_pkr, compare_at_price_pkr: body.compare_at_price_pkr || null, stock: body.stock, status: body.status === "draft" ? "draft" : "active", created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
           const updates = {}; updates["products/" + idRef.key] = product;
           if (product.status === "active") updates["storefrontProducts/" + idRef.key] = product;
           await sdk.update(sdk.ref(db), updates);
@@ -46,9 +48,16 @@ window.LEGEND_ADMIN_READY = (async function () {
           const snap = await sdk.get(sdk.ref(db, "products/" + body.id));
           if (!snap.exists()) { status = 404; throw new Error("Product not found."); }
           const previous = snap.val();
-          const next = { ...previous, ...body, id: undefined, updated_at: new Date().toISOString() }; delete next.id;
-          if (next.status !== "active" && next.status !== "draft") throw new Error("Status must be active or draft.");
-          if (!Number.isSafeInteger(next.price_pkr) || next.price_pkr < 1 || !Number.isSafeInteger(next.stock) || next.stock < 0) throw new Error("Check product price and stock.");
+          const name = typeof body.name === "string" ? body.name.trim() : previous.name;
+          const category = typeof body.category === "string" ? body.category.trim() : previous.category;
+          const description = body.description === undefined ? String(previous.description || "") : String(body.description).trim();
+          const price = body.price_pkr === undefined ? previous.price_pkr : body.price_pkr;
+          const stock = body.stock === undefined ? previous.stock : body.stock;
+          const statusValue = body.status === undefined ? previous.status : body.status;
+          const compareAt = body.compare_at_price_pkr === undefined ? (previous.compare_at_price_pkr || null) : body.compare_at_price_pkr;
+          const slug = String(body.slug || (body.name ? name : previous.slug) || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 90);
+          if (!name || name.length > 120 || !category || category.length > 60 || !slug || description.length > 5000 || !Number.isSafeInteger(price) || price < 1 || price > 100000000 || !Number.isSafeInteger(stock) || stock < 0 || stock > 10000000 || !["active", "draft"].includes(statusValue) || (compareAt != null && (!Number.isSafeInteger(compareAt) || compareAt < 1 || compareAt > 100000000))) throw new Error("Check product name, category, description, slug, price, stock, status and compare-at price.");
+          const next = { name, slug, category, description, price_pkr: price, compare_at_price_pkr: compareAt, stock, status: statusValue, created_at: previous.created_at || new Date().toISOString(), updated_at: new Date().toISOString() };
           const updates = {}; updates["products/" + body.id] = next;
           updates["storefrontProducts/" + body.id] = next.status === "active" ? next : null;
           await sdk.update(sdk.ref(db), updates); result = { product: { id: body.id, ...next } };
