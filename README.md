@@ -43,6 +43,7 @@ A starter Supabase/Postgres schema and a Vercel serverless product API are inclu
 
 - `supabase/schema.sql` — products table, input constraints, updated-at trigger, and row-level security (RLS).
 - `api/admin/products.js` — GET/POST/PATCH/DELETE product operations; verifies the Supabase access token, requires trusted `app_metadata.role = "admin"`, validates input, and keeps service-role access on the server.
+- `admin/login.html`, `admin/admin-guard.js`, and `admin/admin-config.js` — Supabase sign-in and a UI guard. Add only the Supabase project URL and public anon key to the browser config; never put a service-role key there.
 - `.env.example` — names of the Vercel environment variables needed.
 
 ### Setup checklist
@@ -51,7 +52,7 @@ A starter Supabase/Postgres schema and a Vercel serverless product API are inclu
 2. In Vercel Project Settings → Environment Variables, set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Never put the service-role key in frontend code or commit real secrets.
 3. Create the intended admin user in Supabase Auth, then assign `app_metadata.role = "admin"` through a trusted server/admin workflow. Do not trust a role supplied through user-editable metadata.
 4. Deploy the Vercel project and test unauthenticated requests (must return 401), signed-in non-admin requests (must return 403), and authorized admin CRUD flows.
-5. Integrate the admin UI with Supabase sign-in and `/api/admin/products`; the current `admin/` UI is still a local demo and does not call this API.
+5. Fill `admin/admin-config.js` with the Supabase project URL and public anon key. When configured, the admin sign-in flow validates access through `/api/admin/products`, and product create/delete/list operations use the API. With blank config, the UI deliberately remains a clearly labelled local demo.
 6. Add persistent audit-event writes, rate limiting, backup/restore, monitoring, and a review of privacy/data-retention requirements before production use.
 
-No Supabase project has been created, no credentials have been configured, and the API has not yet been tested against a live database. The API is a foundation, not a complete production admin system. Payments and checkout remain disconnected.
+No Supabase project has been created, no credentials have been configured, and the API has not yet been tested against a live database. The API is a foundation, not a complete production admin system. Product listing/creation/deletion are connected when configured; the current admin UI does not yet expose product edit, order management, customer records, real sales analytics, or discount CRUD. Those areas remain illustrative. Payments and checkout remain disconnected.
