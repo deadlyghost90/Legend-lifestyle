@@ -28,7 +28,7 @@ $("#mainNav").addEventListener("click",e=>{if(e.target.closest("a")){$("#mainNav
 $("#newsletterForm").addEventListener("submit",e=>{e.preventDefault();$("#newsletterMessage").textContent="Thanks for your interest. Newsletter signup needs a connected mailing service.";e.target.reset()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCart();closeSearch();$("#mainNav").classList.remove("open")}});
 $("#year").textContent=new Date().getFullYear();renderProducts();updateCart();
-// Live catalogue: Firebase public node contains active products only. Demo products remain as fallback if Firebase is unavailable.
+// Live catalogue: Firebase public node contains active products only. Demo products are used only when no Firebase config is present.
 (async function loadFirebaseCatalogue(){
   const config=window.LEGEND_FIREBASE_CONFIG||{};
   if(!config.apiKey||!config.databaseURL||!config.projectId)return;
