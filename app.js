@@ -45,5 +45,5 @@ $("#year").textContent=new Date().getFullYear();renderProducts();updateCart();
       visual:/audio|earbud|speaker|headphone/i.test(String(p.category||""))?"visual-earbuds":/watch|wearable|band/i.test(String(p.category||""))?"visual-watch":"visual-band", symbol:"", description:String(p.description||"")
     })).filter(p=>p.price>0);
     PRODUCTS=live;renderProducts();updateCart();
-  }catch(error){console.warn("Firebase catalogue unavailable; using demo products.",error&&error.name||"Error");}
+  }catch(error){PRODUCTS=[];renderProducts();updateCart();console.warn("Firebase catalogue unavailable; live products hidden until the connection is fixed.",error&&error.name||"Error");}
 })();
