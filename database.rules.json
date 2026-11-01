@@ -1,0 +1,86 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "products": {
+      ".read": "auth != null && auth.token.admin === true",
+      ".write": "auth != null && auth.token.admin === true",
+      "$productId": {
+        ".validate": "newData.hasChildren(['name','slug','category','price_pkr','stock','status'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "slug": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 90"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "description": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 5000)"
+        },
+        "price_pkr": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000000 && newData.val() % 1 === 0"
+        },
+        "compare_at_price_pkr": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000000 && newData.val() % 1 === 0)"
+        },
+        "stock": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000 && newData.val() % 1 === 0"
+        },
+        "status": {
+          ".validate": "newData.val() === 'active' || newData.val() === 'draft'"
+        },
+        "created_at": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "updated_at": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "storefrontProducts": {
+      ".read": true,
+      ".write": "auth != null && auth.token.admin === true",
+      "$productId": {
+        ".validate": "newData.hasChildren(['name','slug','category','price_pkr','stock','status'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "slug": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 90"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "description": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 5000)"
+        },
+        "price_pkr": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000000 && newData.val() % 1 === 0"
+        },
+        "compare_at_price_pkr": {
+          ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000000 && newData.val() % 1 === 0)"
+        },
+        "stock": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000 && newData.val() % 1 === 0"
+        },
+        "status": {
+          ".validate": "newData.val() === 'active'"
+        },
+        "created_at": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "updated_at": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
