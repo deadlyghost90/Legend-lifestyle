@@ -36,3 +36,22 @@ Before accepting real orders:
 ## Deploy on Vercel
 
 Import this repository in Vercel and choose **Other** / static site. No build command is required; use the repository root as the output directory. The included `vercel.json` provides basic security headers. This configuration has not yet been verified by a Vercel build or deployment.
+
+## Backend foundation (not yet connected to the admin UI)
+
+A starter Supabase/Postgres schema and a Vercel serverless product API are included:
+
+- `supabase/schema.sql` — products table, input constraints, updated-at trigger, and row-level security (RLS).
+- `api/admin/products.js` — GET/POST/PATCH/DELETE product operations; verifies the Supabase access token, requires trusted `app_metadata.role = "admin"`, validates input, and keeps service-role access on the server.
+- `.env.example` — names of the Vercel environment variables needed.
+
+### Setup checklist
+
+1. Create your own Supabase project and run `supabase/schema.sql` in its SQL editor after reviewing it.
+2. In Vercel Project Settings → Environment Variables, set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Never put the service-role key in frontend code or commit real secrets.
+3. Create the intended admin user in Supabase Auth, then assign `app_metadata.role = "admin"` through a trusted server/admin workflow. Do not trust a role supplied through user-editable metadata.
+4. Deploy the Vercel project and test unauthenticated requests (must return 401), signed-in non-admin requests (must return 403), and authorized admin CRUD flows.
+5. Integrate the admin UI with Supabase sign-in and `/api/admin/products`; the current `admin/` UI is still a local demo and does not call this API.
+6. Add persistent audit-event writes, rate limiting, backup/restore, monitoring, and a review of privacy/data-retention requirements before production use.
+
+No Supabase project has been created, no credentials have been configured, and the API has not yet been tested against a live database. The API is a foundation, not a complete production admin system. Payments and checkout remain disconnected.
