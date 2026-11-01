@@ -1,4 +1,4 @@
-const PRODUCTS=[
+let PRODUCTS=[
 {id:1,name:"Legend Active One",type:"watch",label:"SMARTWATCH",price:8999,tag:"BESTSELLER",visual:"visual-watch",symbol:""},
 {id:2,name:"Legend Air Pods",type:"audio",label:"WIRELESS AUDIO",price:4499,tag:"POPULAR",visual:"visual-earbuds"},
 {id:3,name:"Legend Pulse Mini",type:"audio",label:"PORTABLE AUDIO",price:5999,tag:"NEW",visual:"visual-speaker"},
@@ -28,3 +28,22 @@ $("#mainNav").addEventListener("click",e=>{if(e.target.closest("a")){$("#mainNav
 $("#newsletterForm").addEventListener("submit",e=>{e.preventDefault();$("#newsletterMessage").textContent="Thanks for your interest. Newsletter signup needs a connected mailing service.";e.target.reset()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCart();closeSearch();$("#mainNav").classList.remove("open")}});
 $("#year").textContent=new Date().getFullYear();renderProducts();updateCart();
+// Live catalogue: Firebase public node contains active products only. Demo products remain as fallback if Firebase is unavailable.
+(async function loadFirebaseCatalogue(){
+  const config=window.LEGEND_FIREBASE_CONFIG||{};
+  if(!config.apiKey||!config.databaseURL||!config.projectId)return;
+  try{
+    const appSdk=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js");
+    const dbSdk=await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js");
+    const app=appSdk.getApps().length?appSdk.getApp():appSdk.initializeApp(config);
+    const db=dbSdk.getDatabase(app);
+    const snapshot=await dbSdk.get(dbSdk.ref(db,"storefrontProducts"));
+    if(!snapshot.exists())return;
+    const live=Object.entries(snapshot.val()).map(([id,p])=>({
+      id, name:String(p.name||"Product"), type:/audio|earbud|speaker|headphone/i.test(String(p.category||""))?"audio":/watch|wearable|band/i.test(String(p.category||""))?"watch":"accessories",
+      label:String(p.category||"ACCESSORIES").toUpperCase(), price:Number(p.price_pkr)||0, tag:"LEGEND",
+      visual:/audio|earbud|speaker|headphone/i.test(String(p.category||""))?"visual-earbuds":/watch|wearable|band/i.test(String(p.category||""))?"visual-watch":"visual-band", symbol:"", description:String(p.description||"")
+    })).filter(p=>p.price>0);
+    if(live.length){PRODUCTS=live;renderProducts();updateCart();}
+  }catch(error){console.warn("Firebase catalogue unavailable; using demo products.",error&&error.name||"Error");}
+})();
