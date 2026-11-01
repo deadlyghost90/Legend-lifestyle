@@ -27,7 +27,7 @@ Legend Lifestyle is a store/brand operated under Aera. The existing Firebase pro
 ## Limits
 
 - Product listing, creation and deletion use Firebase when configured. Orders, customers, sales metrics, discounts, checkout and payments remain demo-only.
-- The storefront uses sample products only if Firebase cannot be reached or is not configured. Before launch, verify the Firebase connection and remove demo fallback if you prefer a hard failure.
+- The storefront uses sample products only when Firebase config is absent. If a configured Firebase read fails, it hides the catalogue rather than showing sample items. Verify the Firebase connection before launch.
 - CI checks source syntax/tests only; they do not validate your live Firebase project or deployed security rules.
 
 ## Local preview
