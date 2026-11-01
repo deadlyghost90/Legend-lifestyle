@@ -1,29 +1,30 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { validateProduct } = require("../api/admin/products.js");
+const fs = require("node:fs");
+const rules = JSON.parse(fs.readFileSync("database.rules.json", "utf8")).rules;
+const config = fs.readFileSync("firebase-config.js", "utf8");
 
-test("normalizes product slug and trims user input", () => {
-  const result = validateProduct({ name: "  Legend Active One  ", category: " Watches ", price_pkr: 8999, stock: 0 });
-  assert.equal(typeof result, "object");
-  assert.equal(result.name, "Legend Active One");
-  assert.equal(result.category, "Watches");
-  assert.equal(result.slug, "legend-active-one");
-  assert.equal(result.stock, 0);
+test("Realtime Database denies root access by default", () => {
+  assert.equal(rules[".read"], false);
+  assert.equal(rules[".write"], false);
 });
 
-test("rejects invalid prices and negative stock", () => {
-  assert.match(validateProduct({ name: "Test", category: "Audio", price_pkr: 0, stock: 2 }), /Price must/);
-  assert.match(validateProduct({ name: "Test", category: "Audio", price_pkr: 100, stock: -1 }), /Stock must/);
+test("admin catalogue reads and writes require the trusted admin claim", () => {
+  assert.match(rules.products[".read"], /auth\.token\.admin/);
+  assert.match(rules.products[".write"], /auth\.token\.admin/);
 });
 
-test("rejects unknown fields instead of passing them to the database", () => {
-  assert.match(validateProduct({ name: "Test", category: "Audio", price_pkr: 100, stock: 2, is_admin: true }), /fields are not allowed/);
+test("public storefront catalogue is readable but admin-write-only", () => {
+  assert.equal(rules.storefrontProducts[".read"], true);
+  assert.match(rules.storefrontProducts[".write"], /auth\.token\.admin/);
+  assert.equal(rules.storefrontProducts.$productId.status[".validate"], "newData.val() === 'active'");
 });
 
-test("allows a partial stock update with zero units", () => {
-  assert.deepEqual(validateProduct({ stock: 0 }, true), { stock: 0 });
+test("Firebase web config targets the Aera parent-company project", () => {
+  assert.match(config, /projectId:\s*"aera-s-store"/);
+  assert.match(config, /databaseURL:\s*"https:\/\/aera-s-store-default-rtdb\.europe-west1\.firebasedatabase\.app"/);
 });
 
-test("rejects invalid status values", () => {
-  assert.match(validateProduct({ name: "Test", category: "Audio", price_pkr: 100, stock: 2, status: "published" }), /Status must/);
+test("Firebase web config contains no service-account private key material", () => {
+  assert.doesNotMatch(config, /private_key|client_email|BEGIN PRIVATE KEY/);
 });
